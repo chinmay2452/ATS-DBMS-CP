@@ -1,3 +1,5 @@
+-- 1. Prevent Blocked or Hired applicants from applying for a new job
+
 delimiter //
 
 CREATE TRIGGER trg_check_applicant_status
@@ -20,6 +22,8 @@ END;
 
 delimiter ;
 
+-- 2. Automatically update applicant status to Hired when offer is accepted
+
 delimiter //
 
 CREATE TRIGGER trg_offer_accept_update_status
@@ -39,9 +43,14 @@ BEGIN
     END IF;
 END;
 //
+
 delimiter ;
 
+
+-- 3. Prevent applicant from accepting multiple job offers
+
 delimiter //
+
 CREATE TRIGGER trg_prevent_multiple_offers
 BEFORE UPDATE ON Offer
 FOR EACH ROW
@@ -72,7 +81,11 @@ BEGIN
     END IF;
 END;
 //
+
 delimiter ;
+
+
+-- 4. Validate that interview date is not before application date
 
 delimiter //
 
@@ -93,7 +106,11 @@ BEGIN
     END IF;
 END;
 //
+
 delimiter ;
+
+
+-- 5. Automatically log stage changes in Stage_History table
 
 delimiter //
 
@@ -126,6 +143,9 @@ END;
 //
 
 delimiter ;
+
+
+-- 6. Automatically close jobs older than 60 days during update
 
 delimiter //
 
