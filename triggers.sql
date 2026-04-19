@@ -39,7 +39,7 @@ BEGIN
     END IF;
 END;
 //
-delimiter;
+delimiter ;
 
 delimiter //
 CREATE TRIGGER trg_prevent_multiple_offers
