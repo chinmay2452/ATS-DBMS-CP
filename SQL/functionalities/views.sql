@@ -7,7 +7,7 @@ SELECT
     department,
     required_experience,
     posted_date
-FROM Job
+FROM job
 WHERE job_status = 'Open';
 
 
@@ -19,10 +19,10 @@ SELECT
     a.full_name,
     j.job_title,
     ap.application_status
-FROM Applicant a
-JOIN Applications ap ON a.applicant_id = ap.applicant_id
-JOIN Job j ON ap.job_id = j.job_id
-WHERE ap.application_status = 'Shortlisted';
+FROM applicant a
+JOIN application ap ON a.applicant_id = a.applicant_id
+JOIN job j ON ap.job_id = j.job_id
+WHERE ap.application_status = 'Under Review';
 
 
 -- 3. View to display interview schedule
@@ -35,11 +35,11 @@ SELECT
     r.recruiter_name,
     i.interview_date,
     i.interview_type
-FROM Interview i
-JOIN Applications ap ON i.application_id = ap.application_id
-JOIN Applicant a ON ap.applicant_id = a.applicant_id
-JOIN Job j ON ap.job_id = j.job_id
-JOIN Recruiter r ON i.recruiter_id = r.recruiter_id;
+FROM interview i
+JOIN application ap ON i.application_id = ap.application_id
+JOIN applicant a ON ap.applicant_id = a.applicant_id
+JOIN job j ON ap.job_id = j.job_id
+JOIN recruiter r ON i.recruiter_id = r.recruiter_id;
 
 
 -- 4. View to display offer details
@@ -52,10 +52,10 @@ SELECT
     o.salary_package,
     o.offer_status,
     o.offer_date
-FROM Offer_tbl o
-JOIN Applications ap ON o.application_id = ap.application_id
-JOIN Applicant a ON ap.applicant_id = a.applicant_id
-JOIN Job j ON ap.job_id = j.job_id;
+FROM offer o
+JOIN application ap ON o.application_id = ap.application_id
+JOIN applicant a ON ap.applicant_id = a.applicant_id
+JOIN job j ON ap.job_id = j.job_id;
 
 
 -- 5. View to display application tracking status
@@ -66,8 +66,9 @@ SELECT
     a.full_name,
     j.job_title,
     ap.application_status,
-    ap.current_stage,
+    rs.stage_name AS current_stage,
     ap.application_date
-FROM Applications ap
-JOIN Applicant a ON ap.applicant_id = a.applicant_id
-JOIN Job j ON ap.job_id = j.job_id;
+FROM application ap
+JOIN applicant a ON ap.applicant_id = a.applicant_id
+JOIN job j ON ap.job_id = j.job_id
+LEFT JOIN recruitment_stage rs ON ap.current_stage_id = rs.stage_id;
