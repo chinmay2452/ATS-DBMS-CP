@@ -1,5 +1,5 @@
--- 1. Prevent Blocked or Hired applicants from applying for a new job
-delimiter //
+-- 1. "Prevent Blocked or Hired applicants from applying for a new job"
+DELIMITER //
 
 CREATE TRIGGER trg_check_applicant_status
 BEFORE INSERT ON application
@@ -12,18 +12,22 @@ BEGIN
     FROM applicant
     WHERE applicant_id = NEW.applicant_id;
 
-    IF status_val IN ('Blocked', 'Hired') THEN
+    -- also guard for missing applicant
+    IF status_val IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid applicant_id.';
+    END IF;
+
+    IF status_val IN ('Blocked','Hired') THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Blocked or Hired applicant cannot apply.';
     END IF;
 END;
 //
+DELIMITER ;
 
-delimiter ;
-
--- 2. Automatically update applicant status to Hired when offer is accepted
-
-delimiter //
+-- 2. "Update applicant status to Hired when offer is accepted"
+DELIMITER //
 
 CREATE TRIGGER trg_offer_accept_update_status
 AFTER UPDATE ON offer
@@ -39,28 +43,30 @@ BEGIN
             WHERE application_id = NEW.application_id
         );
 
+        -- (optional but correct) also mark application as Hired
+        UPDATE application
+        SET application_status = 'Hired'
+        WHERE application_id = NEW.application_id;
+
     END IF;
 END;
 //
+DELIMITER ;
 
-delimiter ;
-
-
--- 3. Prevent applicant from accepting multiple job offers
-
-delimiter //
+-- 3. "Prevent applicant from accepting multiple job offers"
+DELIMITER //
 
 CREATE TRIGGER trg_prevent_multiple_offers
 BEFORE UPDATE ON offer
 FOR EACH ROW
 BEGIN
-    DECLARE app_id INT;
+    DECLARE v_applicant_id INT;
     DECLARE cnt INT;
 
-    IF NEW.offer_status = 'Accepted' THEN
+    IF NEW.offer_status = 'Accepted' AND OLD.offer_status <> 'Accepted' THEN
 
         SELECT applicant_id
-        INTO app_id
+        INTO v_applicant_id
         FROM application
         WHERE application_id = NEW.application_id;
 
@@ -68,9 +74,9 @@ BEGIN
         INTO cnt
         FROM offer o
         JOIN application a ON o.application_id = a.application_id
-        WHERE a.applicant_id = app_id
-        AND o.offer_status = 'Accepted'
-        AND o.offer_id <> NEW.offer_id;
+        WHERE a.applicant_id = v_applicant_id
+          AND o.offer_status = 'Accepted'
+          AND o.offer_id <> NEW.offer_id;
 
         IF cnt > 0 THEN
             SIGNAL SQLSTATE '45000'
@@ -80,13 +86,11 @@ BEGIN
     END IF;
 END;
 //
+DELIMITER ;
 
-delimiter ;
 
-
--- 4. Validate that interview date is not before application date
-
-delimiter //
+-- 4. "Ensure interview date is not before application date"
+DELIMITER //
 
 CREATE TRIGGER trg_validate_interview_date
 BEFORE INSERT ON interview
@@ -99,19 +103,21 @@ BEGIN
     FROM application
     WHERE application_id = NEW.application_id;
 
+    IF app_date IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid application_id for interview.';
+    END IF;
+
     IF NEW.interview_date < app_date THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Interview date cannot be before application date.';
     END IF;
 END;
 //
+DELIMITER ;
 
-delimiter ;
-
-
--- 5. Automatically log stage changes in stage_history table
-
-delimiter //
+-- 5. "Log stage changes in stage_history table"
+DELIMITER //
 
 CREATE TRIGGER trg_log_stage_change
 AFTER UPDATE ON application
@@ -119,13 +125,12 @@ FOR EACH ROW
 BEGIN
     DECLARE sname VARCHAR(50);
 
-    IF OLD.current_stage_id <> NEW.current_stage_id THEN
+    IF OLD.current_stage_id <> NEW.current_stage_id AND NEW.current_stage_id IS NOT NULL THEN
 
         SELECT stage_name
         INTO sname
         FROM recruitment_stage
-        WHERE stage_id = NEW.current_stage_id
-        LIMIT 1;
+        WHERE stage_id = NEW.current_stage_id;
 
         INSERT INTO stage_history
         (moved_on, remarks, application_id, stage_id)
@@ -139,13 +144,10 @@ BEGIN
     END IF;
 END;
 //
+DELIMITER ;
 
-delimiter ;
-
-
--- 6. Automatically close jobs older than 60 days during update
-
-delimiter //
+-- 6. "Auto-close jobs older than 60 days on update"
+DELIMITER //
 
 CREATE TRIGGER trg_auto_close_job
 BEFORE UPDATE ON job
@@ -156,5 +158,4 @@ BEGIN
     END IF;
 END;
 //
-
-delimiter ;
+DELIMITER ;

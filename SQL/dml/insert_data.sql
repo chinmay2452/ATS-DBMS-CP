@@ -41,19 +41,21 @@ INSERT INTO recruitment_stage VALUES
 (5,'Rejected',5);
 
 -- =========================
--- APPLICATIONS
+-- APPLICATION
 -- =========================
-INSERT INTO applications VALUES
-(1001,'2026-04-10','Applied','Applied',1,101),
-(1002,'2026-04-10','Shortlisted','Shortlisted',2,101),
-(1003,'2026-04-11','Rejected','Rejected',3,102),
-(1004,'2026-04-12','Selected','Selected',4,103),
-(1005,'2026-04-12','Applied','Applied',6,104),
-(1006,'2026-04-13','Shortlisted','Shortlisted',7,101),
-(1007,'2026-04-13','Rejected','Rejected',8,102),
-(1008,'2026-04-14','Selected','Selected',9,104),
-(1009,'2026-04-15','Applied','Applied',10,103),
-(1010,'2026-04-15','Shortlisted','Shortlisted',1,102);
+INSERT INTO application 
+(application_id, application_date, application_status, current_stage_id, applicant_id, job_id)
+VALUES
+(1001,'2026-04-10','Active',1,1,101),
+(1002,'2026-04-10','Active',2,2,101),
+(1003,'2026-04-11','Rejected',5,3,102),
+(1004,'2026-04-12','Hired',4,4,103),
+(1005,'2026-04-12','Active',1,6,104),
+(1006,'2026-04-13','Active',2,7,101),
+(1007,'2026-04-13','Rejected',5,8,102),
+(1008,'2026-04-14','Hired',4,9,104),
+(1009,'2026-04-15','Active',1,10,103),
+(1010,'2026-04-15','Active',2,1,102);
 
 -- =========================
 -- ELIGIBILITY CRITERIA
@@ -87,6 +89,6 @@ INSERT INTO interview VALUES
 -- =========================
 -- OFFER
 -- =========================
-INSERT INTO offer_tbl VALUES
+INSERT INTO offer VALUES
 (601,'2026-04-14',800000,'Accepted',1004),
 (602,'2026-04-15',750000,'Pending',1008);

@@ -1,5 +1,4 @@
--- 1. View to display all currently open jobs
-
+-- 1. "View to display all currently open jobs"
 CREATE VIEW vw_active_jobs AS
 SELECT 
     job_id,
@@ -11,22 +10,21 @@ FROM job
 WHERE job_status = 'Open';
 
 
--- 2. View to display shortlisted candidates
-
+-- 2. "View to display shortlisted candidates"
 CREATE VIEW vw_shortlisted_candidates AS
 SELECT
     a.applicant_id,
     a.full_name,
     j.job_title,
-    ap.application_status
+    rs.stage_name AS current_stage
 FROM applicant a
-JOIN application ap ON a.applicant_id = a.applicant_id
+JOIN application ap ON a.applicant_id = ap.applicant_id
 JOIN job j ON ap.job_id = j.job_id
-WHERE ap.application_status = 'Under Review';
+JOIN recruitment_stage rs ON ap.current_stage_id = rs.stage_id
+WHERE rs.stage_name = 'Shortlisted';
 
 
--- 3. View to display interview schedule
-
+-- 3. "View to display interview schedule"
 CREATE VIEW vw_interview_schedule AS
 SELECT
     i.interview_id,
@@ -42,8 +40,7 @@ JOIN job j ON ap.job_id = j.job_id
 JOIN recruiter r ON i.recruiter_id = r.recruiter_id;
 
 
--- 4. View to display offer details
-
+-- 4. "View to display offer details"
 CREATE VIEW vw_offer_summary AS
 SELECT
     o.offer_id,
@@ -58,8 +55,7 @@ JOIN applicant a ON ap.applicant_id = a.applicant_id
 JOIN job j ON ap.job_id = j.job_id;
 
 
--- 5. View to display application tracking status
-
+-- 5. "View to display application tracking status"
 CREATE VIEW vw_application_status AS
 SELECT
     ap.application_id,
