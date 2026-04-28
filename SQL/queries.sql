@@ -114,9 +114,7 @@ JOIN Interview i ON ap.application_id = i.application_id
 JOIN Recruiter r ON i.recruiter_id = r.recruiter_id;
 
 
--- ===========================================
 -- REPORTS / ANALYTICS QUERIES (Part B)
--- ===========================================
 
 
 -- 1. Count total applicants per job

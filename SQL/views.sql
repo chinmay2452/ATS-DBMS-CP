@@ -20,7 +20,7 @@ SELECT
     j.job_title,
     ap.application_status
 FROM Applicant a
-JOIN Application ap ON a.applicant_id = ap.applicant_id
+JOIN Applications ap ON a.applicant_id = ap.applicant_id
 JOIN Job j ON ap.job_id = j.job_id
 WHERE ap.application_status = 'Shortlisted';
 
@@ -36,7 +36,7 @@ SELECT
     i.interview_date,
     i.interview_type
 FROM Interview i
-JOIN Application ap ON i.application_id = ap.application_id
+JOIN Applications ap ON i.application_id = ap.application_id
 JOIN Applicant a ON ap.applicant_id = a.applicant_id
 JOIN Job j ON ap.job_id = j.job_id
 JOIN Recruiter r ON i.recruiter_id = r.recruiter_id;
@@ -52,8 +52,8 @@ SELECT
     o.salary_package,
     o.offer_status,
     o.offer_date
-FROM Offer o
-JOIN Application ap ON o.application_id = ap.application_id
+FROM Offer_tbl o
+JOIN Applications ap ON o.application_id = ap.application_id
 JOIN Applicant a ON ap.applicant_id = a.applicant_id
 JOIN Job j ON ap.job_id = j.job_id;
 
@@ -68,6 +68,6 @@ SELECT
     ap.application_status,
     ap.current_stage,
     ap.application_date
-FROM Application ap
+FROM Applications ap
 JOIN Applicant a ON ap.applicant_id = a.applicant_id
 JOIN Job j ON ap.job_id = j.job_id;

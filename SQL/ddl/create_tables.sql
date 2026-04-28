@@ -1,100 +1,93 @@
-
--- Applicant Table 
-CREATE TABLE Applicant (
-    applicant_id INT PRIMARY KEY,
+-- 1. applicant Table 
+CREATE TABLE applicant (
+    applicant_id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE,
     phone VARCHAR(15) UNIQUE,
     highest_qualification VARCHAR(50),
     total_experience INT CHECK (total_experience >= 0),
     resume_link VARCHAR(255),
-    applicant_status VARCHAR(20) 
-        CHECK (applicant_status IN ('Active','Blocked','Hired'))
+    applicant_status ENUM('Active', 'Blocked', 'Hired') NOT NULL DEFAULT 'Active'
 );
 
--- Job taBle
-CREATE TABLE Job (
-    job_id INT PRIMARY KEY,
+-- 2. job Table
+CREATE TABLE job (
+    job_id INT AUTO_INCREMENT PRIMARY KEY,
     job_title VARCHAR(100) NOT NULL,
     department VARCHAR(50) NOT NULL,
     required_experience INT CHECK (required_experience >= 0),
-    job_status VARCHAR(20) CHECK (job_status IN ('Open','Closed')),
+    job_status ENUM('Open', 'Closed') NOT NULL DEFAULT 'Open',
     posted_date DATE NOT NULL
 );
 
--- Recruiter Table
-CREATE TABLE Recruiter (
-    recruiter_id INT PRIMARY KEY,
+-- 3. recruiter Table
+CREATE TABLE recruiter (
+    recruiter_id INT AUTO_INCREMENT PRIMARY KEY,
     recruiter_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE,
-    role VARCHAR(30) CHECK (role IN ('Recruiter','HR','Admin'))
+    role ENUM('Recruiter', 'HR', 'Admin') NOT NULL
 );
 
--- Recruitment Stage table 
-CREATE TABLE Recruitment_Stage (
-    stage_id INT PRIMARY KEY,
-    stage_name VARCHAR(50) UNIQUE,
+-- 4. recruitment_stage Table 
+CREATE TABLE recruitment_stage ( 
+    stage_id INT AUTO_INCREMENT PRIMARY KEY,
+    stage_name VARCHAR(50) UNIQUE NOT NULL,
     stage_order INT CHECK (stage_order > 0)
 );
 
--- APPLICATION Table
-CREATE TABLE Application (
-    application_id INT PRIMARY KEY,
+-- 5. application Table
+CREATE TABLE application (
+    application_id INT AUTO_INCREMENT PRIMARY KEY,
     application_date DATE NOT NULL,
-    application_status VARCHAR(20)
-        CHECK (application_status IN ('Applied','Shortlisted','Rejected','Selected')),
-    current_stage VARCHAR(30),
-    applicant_id INT,
-    job_id INT,
-    FOREIGN KEY (applicant_id) REFERENCES Applicant(applicant_id),
-    FOREIGN KEY (job_id) REFERENCES Job(job_id)
+    application_status ENUM('Pending', 'Under Review', 'Rejected', 'Hired') DEFAULT 'Pending',
+    current_stage_id INT, -- Replaced VARCHAR with a proper Foreign Key
+    applicant_id INT NOT NULL,
+    job_id INT NOT NULL,
+    FOREIGN KEY (applicant_id) REFERENCES applicant(applicant_id) ON DELETE CASCADE,
+    FOREIGN KEY (job_id) REFERENCES job(job_id) ON DELETE CASCADE,
+    FOREIGN KEY (current_stage_id) REFERENCES recruitment_stage(stage_id) ON DELETE SET NULL
 );
 
--- ELIGIBILITY_CRITERIA Table
-CREATE TABLE Eligibility_Criteria (
-    criteria_id INT PRIMARY KEY,
+-- 6. eligibility_criteria Table
+CREATE TABLE eligibility_criteria (
+    criteria_id INT AUTO_INCREMENT PRIMARY KEY,
     min_experience INT CHECK (min_experience >= 0),
     required_skills VARCHAR(255),
     qualification VARCHAR(50),
-    job_id INT,
-    FOREIGN KEY (job_id) REFERENCES Job(job_id)
+    job_id INT NOT NULL,
+    FOREIGN KEY (job_id) REFERENCES job(job_id) ON DELETE CASCADE
 );
 
--- STAGE_HISTORY Table
-CREATE TABLE Stage_History (
-    history_id INT PRIMARY KEY,
+-- 7. stage_history Table
+CREATE TABLE stage_history (
+    history_id INT AUTO_INCREMENT PRIMARY KEY,
     moved_on DATE NOT NULL,
     remarks VARCHAR(255),
-    application_id INT,
-    stage_id INT,
-    FOREIGN KEY (application_id) REFERENCES Application(application_id),
-    FOREIGN KEY (stage_id) REFERENCES Recruitment_Stage(stage_id)
+    application_id INT NOT NULL,
+    stage_id INT NOT NULL,
+    FOREIGN KEY (application_id) REFERENCES application(application_id) ON DELETE CASCADE,
+    FOREIGN KEY (stage_id) REFERENCES recruitment_stage(stage_id) ON DELETE CASCADE
 );
 
--- INTERVIEW Table
-CREATE TABLE Interview (
-    interview_id INT PRIMARY KEY,
+-- 8. interview Table
+CREATE TABLE interview (
+    interview_id INT AUTO_INCREMENT PRIMARY KEY,
     interview_date DATE NOT NULL,
-    interview_type VARCHAR(30)
-        CHECK (interview_type IN ('Technical','HR')),
+    interview_type ENUM('Technical', 'HR') NOT NULL,
     feedback VARCHAR(255),
-    result VARCHAR(20)
-        CHECK (result IN ('Pass','Fail')),
-    application_id INT,
+    result ENUM('Pass', 'Fail'),
+    application_id INT NOT NULL,
     recruiter_id INT,
-    FOREIGN KEY (application_id) REFERENCES Application(application_id),
-    FOREIGN KEY (recruiter_id) REFERENCES Recruiter(recruiter_id)
+    FOREIGN KEY (application_id) REFERENCES application(application_id) ON DELETE CASCADE,
+    FOREIGN KEY (recruiter_id) REFERENCES recruiter(recruiter_id) ON DELETE SET NULL
 );
 
--- OFFER Table
-CREATE TABLE Offer (
-    offer_id INT PRIMARY KEY,
+-- 9. offer Table
+CREATE TABLE offer (
+    offer_id INT AUTO_INCREMENT PRIMARY KEY,
     offer_date DATE NOT NULL,
     salary_package DECIMAL(10,2) CHECK (salary_package > 0),
-    offer_status VARCHAR(20)
-        CHECK (offer_status IN ('Pending','Accepted','Rejected')),
-    application_id INT UNIQUE,
-    FOREIGN KEY (application_id) REFERENCES Application(application_id)
+    offer_status ENUM('Pending', 'Accepted', 'Rejected') NOT NULL DEFAULT 'Pending',
+    application_id INT UNIQUE NOT NULL,
+    FOREIGN KEY (application_id) REFERENCES application(application_id) ON DELETE CASCADE
 );
-
-

@@ -1,4 +1,3 @@
-
 --1. Apply for job
 DELIMITER //
 
@@ -8,7 +7,7 @@ CREATE PROCEDURE ApplyForJob(
     IN p_job_id INT
 )
 BEGIN
-    INSERT INTO Application(
+    INSERT INTO Applications(
         application_id,
         application_date,
         application_status,

@@ -24,7 +24,7 @@ INSERT INTO Recruitment_Stage VALUES
 (4, 'Selected', 4);
 
 -- APPLICATION
-INSERT INTO Application VALUES
+INSERT INTO Applications VALUES
 (1001, '2026-04-10', 'Applied', 'Applied', 1, 101),
 (1002, '2026-04-10', 'Shortlisted', 'Shortlisted', 2, 101),
 (1003, '2026-04-11', 'Applied', 'Applied', 3, 102),
@@ -48,7 +48,7 @@ INSERT INTO Interview VALUES
 (502, '2026-04-13', 'HR', 'Average', 'Pass', 1004, 202);
 
 -- OFFER
-INSERT INTO Offer VALUES
+INSERT INTO Offer_tbl VALUES
 (601, '2026-04-14', 800000, 'Accepted', 1004);
 
 

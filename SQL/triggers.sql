@@ -1,9 +1,8 @@
 -- 1. Prevent Blocked or Hired applicants from applying for a new job
-
 delimiter //
 
 CREATE TRIGGER trg_check_applicant_status
-BEFORE INSERT ON Application
+BEFORE INSERT ON Applications
 FOR EACH ROW
 BEGIN
     DECLARE status_val VARCHAR(20);
@@ -27,7 +26,7 @@ delimiter ;
 delimiter //
 
 CREATE TRIGGER trg_offer_accept_update_status
-AFTER UPDATE ON Offer
+AFTER UPDATE ON offer_tbl
 FOR EACH ROW
 BEGIN
     IF NEW.offer_status = 'Accepted' AND OLD.offer_status <> 'Accepted' THEN
@@ -36,7 +35,7 @@ BEGIN
         SET applicant_status = 'Hired'
         WHERE applicant_id = (
             SELECT applicant_id
-            FROM Application
+            FROM Applications
             WHERE application_id = NEW.application_id
         );
 
@@ -52,7 +51,7 @@ delimiter ;
 delimiter //
 
 CREATE TRIGGER trg_prevent_multiple_offers
-BEFORE UPDATE ON Offer
+BEFORE UPDATE ON Offer_tbl
 FOR EACH ROW
 BEGIN
     DECLARE app_id INT;
@@ -62,13 +61,13 @@ BEGIN
 
         SELECT applicant_id
         INTO app_id
-        FROM Application
+        FROM Applications
         WHERE application_id = NEW.application_id;
 
         SELECT COUNT(*)
         INTO cnt
         FROM Offer o
-        JOIN Application a ON o.application_id = a.application_id
+        JOIN Applications a ON o.application_id = a.application_id
         WHERE a.applicant_id = app_id
         AND o.offer_status = 'Accepted'
         AND o.offer_id <> NEW.offer_id;
@@ -97,7 +96,7 @@ BEGIN
 
     SELECT application_date
     INTO app_date
-    FROM Application
+    FROM Applications
     WHERE application_id = NEW.application_id;
 
     IF NEW.interview_date < app_date THEN
@@ -115,7 +114,7 @@ delimiter ;
 delimiter //
 
 CREATE TRIGGER trg_log_stage_change
-AFTER UPDATE ON Application
+AFTER UPDATE ON Applications
 FOR EACH ROW
 BEGIN
     DECLARE sid INT;
