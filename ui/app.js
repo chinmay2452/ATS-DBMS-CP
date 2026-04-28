@@ -1,4 +1,4 @@
-// ui/app.js — Live API Integration
+// ui/app.js — Live API Integration (Advanced)
 const API = 'http://localhost:3000/api';
 
 // DOM Elements
@@ -53,6 +53,24 @@ function renderPage(page) {
                 addBtn.onclick = () => showAddApplicationModal();
                 await renderApplications();
                 break;
+            case 'interviews':
+                pageTitle.innerText = 'Interviews Scheduled';
+                addBtn.innerHTML = '<i class="fas fa-calendar-plus"></i> Schedule Interview';
+                addBtn.onclick = () => showScheduleInterviewModal();
+                await renderInterviews();
+                break;
+            case 'offers':
+                pageTitle.innerText = 'Offer Management';
+                addBtn.innerHTML = '<i class="fas fa-file-invoice-dollar"></i> New Offer';
+                addBtn.onclick = () => showToast('Offer generation usually triggered after selection.', 'info');
+                await renderOffers();
+                break;
+            case 'reports':
+                pageTitle.innerText = 'Reports & Analytics';
+                addBtn.innerHTML = '<i class="fas fa-download"></i> Export Data';
+                addBtn.onclick = () => showToast('Exporting data...', 'info');
+                await renderReports();
+                break;
         }
         contentArea.style.opacity = 1;
     }, 200);
@@ -87,20 +105,20 @@ async function renderDashboard() {
             </div>
             <div class="stat-card">
                 <div class="stat-icon warning"><i class="fas fa-briefcase"></i></div>
-                <div class="stat-info"><h3>Open Jobs</h3><p>${stats.openJobs}</p></div>
+                <div class="stat-info"><h3>Active Jobs</h3><p>${stats.openJobs}</p></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon success"><i class="fas fa-file-signature"></i></div>
-                <div class="stat-info"><h3>Applications</h3><p>${stats.totalApplications}</p></div>
+                <div class="stat-icon success" style="background:#fef3c7;color:#d97706;"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-info"><h3>Interviews</h3><p>${stats.totalInterviews}</p></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background:#dbeafe;color:#3b82f6;"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-info"><h3>Hired</h3><p>${stats.hired}</p></div>
+                <div class="stat-info"><h3>Offers</h3><p>${stats.totalOffers}</p></div>
             </div>
         </div>
         <div class="table-container">
             <div class="table-header">
-                <h3>Recent Applications</h3>
+                <h3>Recent Activity</h3>
                 <button class="btn-primary" style="padding:.4rem .8rem;font-size:.8rem" onclick="document.querySelector('[data-target=applications]').click()">View All</button>
             </div>
             <table>
@@ -126,16 +144,15 @@ async function renderJobs() {
 
     contentArea.innerHTML = `
         <div class="table-container">
-            <div class="table-header"><h3>All Job Postings</h3><span style="color:var(--text-muted);font-size:.85rem">${jobs.length} jobs found</span></div>
+            <div class="table-header"><h3>All Job Postings</h3></div>
             <table>
-                <thead><tr><th>ID</th><th>Title</th><th>Department</th><th>Exp. Required</th><th>Status</th><th>Posted Date</th></tr></thead>
+                <thead><tr><th>Title</th><th>Department</th><th>Criteria</th><th>Status</th><th>Posted Date</th></tr></thead>
                 <tbody>
                     ${jobs.map(j => `
                         <tr>
-                            <td>#${j.id}</td>
                             <td><strong>${j.title}</strong></td>
                             <td>${j.department}</td>
-                            <td>${j.exp} Yr${j.exp !== 1 ? 's' : ''}</td>
+                            <td><span style="font-size:.8rem;color:var(--text-muted)">${j.required_skills || 'N/A'}<br>${j.qualification || ''}</span></td>
                             <td><span class="badge ${j.status === 'Open' ? 'open' : 'rejected'}">${j.status}</span></td>
                             <td>${j.date ? j.date.split('T')[0] : ''}</td>
                         </tr>`).join('')}
@@ -152,50 +169,31 @@ async function renderApplicants() {
 
     contentArea.innerHTML = `
         <div class="table-container">
-            <div class="table-header"><h3>Applicant Directory</h3><span style="color:var(--text-muted);font-size:.85rem">${applicants.length} applicants</span></div>
-            <table>
-                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Qualification</th><th>Experience</th><th>Status</th></tr></thead>
+            <div class="table-header">
+                <h3>Applicant Directory</h3>
+                <div style="display:flex;gap:10px">
+                    <select onchange="filterApplicants(this.value)" style="padding:.3rem;border-radius:4px;border:1px solid var(--border)">
+                        <option value="All">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Blocked">Blocked</option>
+                        <option value="Hired">Hired</option>
+                    </select>
+                </div>
+            </div>
+            <table id="applicants-table">
+                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Exp</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody>
                     ${applicants.map(a => `
-                        <tr>
-                            <td>#${a.id}</td>
+                        <tr data-status="${a.status}">
                             <td><strong>${a.name}</strong></td>
                             <td>${a.email}</td>
                             <td>${a.phone}</td>
-                            <td>${a.qual}</td>
-                            <td>${a.exp} Yr${a.exp !== 1 ? 's' : ''}</td>
-                            <td><span class="badge ${a.status === 'Active' ? 'open' : 'rejected'}">${a.status}</span></td>
-                        </tr>`).join('')}
-                </tbody>
-            </table>
-        </div>`;
-}
-
-// ─── Applications ─────────────────────────────────────────────────────────────
-async function renderApplications() {
-    contentArea.innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>`;
-    const apps = await apiFetch('/applications');
-    if (!apps) return;
-
-    contentArea.innerHTML = `
-        <div class="table-container">
-            <div class="table-header"><h3>Application Tracking</h3><span style="color:var(--text-muted);font-size:.85rem">${apps.length} applications</span></div>
-            <table>
-                <thead><tr><th>App ID</th><th>Applicant</th><th>Job</th><th>Date</th><th>Status</th></tr></thead>
-                <tbody>
-                    ${apps.map(a => `
-                        <tr>
-                            <td>#${a.id}</td>
-                            <td><strong>${a.applicantName}</strong></td>
-                            <td>${a.jobTitle}</td>
-                            <td>${a.date ? a.date.split('T')[0] : ''}</td>
+                            <td>${a.exp} Yr</td>
+                            <td><span class="badge ${badgeClass(a.status)}">${a.status}</span></td>
                             <td>
-                                <select onchange="updateStatus(${a.id}, this.value)" style="padding:.35rem .5rem;border-radius:6px;border:1px solid var(--border);font-size:.85rem;cursor:pointer">
-                                    <option value="Pending" ${a.status==='Pending'?'selected':''}>Pending</option>
-                                    <option value="Under Review" ${a.status==='Under Review'?'selected':''}>Under Review</option>
-                                    <option value="Rejected" ${a.status==='Rejected'?'selected':''}>Rejected</option>
-                                    <option value="Hired" ${a.status==='Hired'?'selected':''}>Hired</option>
-                                </select>
+                                <button class="btn-primary" style="padding:.2rem .5rem;font-size:.75rem;background:${a.status==='Blocked'?'var(--secondary)':'var(--danger)'}" onclick="toggleBlock(${a.id}, '${a.status}')">
+                                    ${a.status === 'Blocked' ? 'Unblock' : 'Block'}
+                                </button>
                             </td>
                         </tr>`).join('')}
                 </tbody>
@@ -203,108 +201,232 @@ async function renderApplications() {
         </div>`;
 }
 
-// ─── Status Update ────────────────────────────────────────────────────────────
-async function updateStatus(appId, newStatus) {
-    const res = await apiFetch(`/applications/${appId}`, {
+function filterApplicants(status) {
+    const rows = document.querySelectorAll('#applicants-table tbody tr');
+    rows.forEach(row => {
+        if (status === 'All' || row.getAttribute('data-status') === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+async function toggleBlock(id, currentStatus) {
+    const newStatus = currentStatus === 'Blocked' ? 'Active' : 'Blocked';
+    const res = await apiFetch(`/applicants/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
     });
-    if (res) showToast(`✅ Status updated to "${newStatus}"`);
+    if (res) {
+        showToast(`✅ Applicant status updated to ${newStatus}`);
+        renderApplicants();
+    }
 }
 
-// ─── Add Job Modal ────────────────────────────────────────────────────────────
-function showAddJobModal() {
-    modalTitle.innerText = 'Post a New Job';
+// ─── Applications ─────────────────────────────────────────────────────────────
+async function renderApplications() {
+    contentArea.innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>`;
+    const [apps, stages] = await Promise.all([apiFetch('/applications'), apiFetch('/stages')]);
+    if (!apps) return;
+
+    contentArea.innerHTML = `
+        <div class="table-container">
+            <div class="table-header"><h3>Application Tracking</h3></div>
+            <table>
+                <thead><tr><th>Applicant</th><th>Job</th><th>Status</th><th>Current Stage</th><th>Update</th></tr></thead>
+                <tbody>
+                    ${apps.map(a => `
+                        <tr>
+                            <td><strong>${a.applicantName}</strong></td>
+                            <td>${a.jobTitle}</td>
+                            <td>
+                                <select onchange="updateStatus(${a.id}, this.value)" style="padding:.3rem;border-radius:4px;border:1px solid var(--border)">
+                                    <option value="Applied" ${a.status==='Applied'?'selected':''}>Applied</option>
+                                    <option value="Shortlisted" ${a.status==='Shortlisted'?'selected':''}>Shortlisted</option>
+                                    <option value="Selected" ${a.status==='Selected'?'selected':''}>Selected</option>
+                                    <option value="Rejected" ${a.status==='Rejected'?'selected':''}>Rejected</option>
+                                </select>
+                            </td>
+                            <td><span class="badge shortlisted" style="background:#e0e7ff">${a.currentStage || 'Applied'}</span></td>
+                            <td>
+                                <button class="btn-primary" style="padding:.3rem .6rem;font-size:.8rem" onclick="showUpdateStageModal(${a.id}, '${a.applicantName}')">Move Stage</button>
+                            </td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+}
+
+async function showUpdateStageModal(appId, name) {
+    const stages = await apiFetch('/stages');
+    modalTitle.innerText = `Update Stage for ${name}`;
     modalBody.innerHTML = `
-        <div class="form-group"><label>Job Title</label><input id="jTitle" placeholder="e.g. Software Engineer"></div>
-        <div class="form-group"><label>Department</label><input id="jDept" placeholder="e.g. IT"></div>
-        <div class="form-group"><label>Required Experience (Years)</label><input id="jExp" type="number" min="0" value="0"></div>
-        <div class="form-group"><label>Posted Date</label><input id="jDate" type="date" value="${today()}"></div>
-        <div class="form-group"><label>Status</label>
-            <select id="jStatus"><option value="Open">Open</option><option value="Closed">Closed</option></select>
-        </div>
-        <button class="btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="submitJob()">Post Job</button>`;
-    openModal();
-}
-
-async function submitJob() {
-    const body = {
-        title: document.getElementById('jTitle').value,
-        department: document.getElementById('jDept').value,
-        exp: document.getElementById('jExp').value,
-        date: document.getElementById('jDate').value,
-        status: document.getElementById('jStatus').value
-    };
-    if (!body.title || !body.department) return showToast('⚠️ Title and Department are required', 'error');
-    const res = await apiFetch('/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (res) { closeModal(); showToast('✅ Job posted!'); renderPage('jobs'); }
-}
-
-// ─── Add Applicant Modal ──────────────────────────────────────────────────────
-function showAddApplicantModal() {
-    modalTitle.innerText = 'Add New Applicant';
-    modalBody.innerHTML = `
-        <div class="form-group"><label>Full Name</label><input id="aName" placeholder="e.g. John Doe"></div>
-        <div class="form-group"><label>Email</label><input id="aEmail" type="email" placeholder="john@email.com"></div>
-        <div class="form-group"><label>Phone</label><input id="aPhone" placeholder="10-digit number"></div>
-        <div class="form-group"><label>Highest Qualification</label><input id="aQual" placeholder="e.g. B.Tech"></div>
-        <div class="form-group"><label>Total Experience (Years)</label><input id="aExp" type="number" min="0" value="0"></div>
-        <button class="btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="submitApplicant()">Add Applicant</button>`;
-    openModal();
-}
-
-async function submitApplicant() {
-    const body = {
-        name: document.getElementById('aName').value,
-        email: document.getElementById('aEmail').value,
-        phone: document.getElementById('aPhone').value,
-        qual: document.getElementById('aQual').value,
-        exp: document.getElementById('aExp').value
-    };
-    if (!body.name || !body.email) return showToast('⚠️ Name and Email are required', 'error');
-    const res = await apiFetch('/applicants', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (res) { closeModal(); showToast('✅ Applicant added!'); renderPage('applicants'); }
-}
-
-// ─── Add Application Modal ────────────────────────────────────────────────────
-async function showAddApplicationModal() {
-    const [applicants, jobs] = await Promise.all([apiFetch('/applicants'), apiFetch('/jobs')]);
-    modalTitle.innerText = 'Submit New Application';
-    modalBody.innerHTML = `
-        <div class="form-group"><label>Applicant</label>
-            <select id="apApplicant">
-                ${(applicants || []).map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
+        <div class="form-group"><label>Select New Stage</label>
+            <select id="newStageId">
+                ${stages.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
             </select>
         </div>
-        <div class="form-group"><label>Job</label>
-            <select id="apJob">
-                ${(jobs || []).map(j => `<option value="${j.id}">${j.title} (${j.department})</option>`).join('')}
-            </select>
-        </div>
-        <div class="form-group"><label>Application Date</label><input id="apDate" type="date" value="${today()}"></div>
-        <button class="btn-primary" style="width:100%;justify-content:center;margin-top:.5rem" onclick="submitApplication()">Submit Application</button>`;
+        <button class="btn-primary" style="width:100%;justify-content:center" onclick="submitStageUpdate(${appId})">Update Stage</button>`;
     openModal();
 }
 
-async function submitApplication() {
-    const body = {
-        applicantId: document.getElementById('apApplicant').value,
-        jobId: document.getElementById('apJob').value,
-        date: document.getElementById('apDate').value
-    };
-    const res = await apiFetch('/applications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (res) { closeModal(); showToast('✅ Application submitted!'); renderPage('applications'); }
+async function submitStageUpdate(appId) {
+    const stageId = document.getElementById('newStageId').value;
+    const res = await apiFetch(`/applications/${appId}/stage`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stageId })
+    });
+    if (res) { closeModal(); showToast('✅ Stage updated!'); renderApplications(); }
 }
 
-// ─── Modal Helpers ────────────────────────────────────────────────────────────
+// ─── Interviews ─────────────────────────────────────────────────────────────
+async function renderInterviews() {
+    contentArea.innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>`;
+    const interviews = await apiFetch('/interviews');
+    if (!interviews) return;
+
+    contentArea.innerHTML = `
+        <div class="table-container">
+            <div class="table-header"><h3>Interview Schedule</h3></div>
+            <table>
+                <thead><tr><th>Applicant</th><th>Date</th><th>Type</th><th>Recruiter</th><th>Result</th></tr></thead>
+                <tbody>
+                    ${interviews.map(i => `
+                        <tr>
+                            <td><strong>${i.applicantName}</strong></td>
+                            <td>${i.date ? i.date.split('T')[0] : ''}</td>
+                            <td>${i.type}</td>
+                            <td>${i.recruiterName || 'Unassigned'}</td>
+                            <td><span class="badge ${i.result==='Pass'?'selected':i.result==='Fail'?'rejected':'applied'}">${i.result || 'Pending'}</span></td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+}
+
+async function showScheduleInterviewModal() {
+    const [apps, recruiters] = await Promise.all([apiFetch('/applications'), apiFetch('/recruiters')]);
+    modalTitle.innerText = 'Schedule Interview';
+    modalBody.innerHTML = `
+        <div class="form-group"><label>Application</label>
+            <select id="iAppId">${apps.map(a => `<option value="${a.id}">${a.applicantName} - ${a.jobTitle}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label>Interview Date</label><input type="date" id="iDate" value="${today()}"></div>
+        <div class="form-group"><label>Type</label>
+            <select id="iType"><option value="Technical">Technical</option><option value="HR">HR</option></select>
+        </div>
+        <div class="form-group"><label>Recruiter</label>
+            <select id="iRecId">${recruiters.map(r => `<option value="${r.id}">${r.name} (${r.role})</option>`).join('')}</select>
+        </div>
+        <button class="btn-primary" style="width:100%;justify-content:center" onclick="submitInterview()">Schedule</button>`;
+    openModal();
+}
+
+async function submitInterview() {
+    const body = {
+        applicationId: document.getElementById('iAppId').value,
+        date: document.getElementById('iDate').value,
+        type: document.getElementById('iType').value,
+        recruiterId: document.getElementById('iRecId').value
+    };
+    const res = await apiFetch('/interviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (res) { closeModal(); showToast('✅ Interview scheduled!'); renderInterviews(); }
+}
+
+// ─── Offers ──────────────────────────────────────────────────────────────────
+async function renderOffers() {
+    contentArea.innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>`;
+    const offers = await apiFetch('/offers');
+    if (!offers) return;
+
+    contentArea.innerHTML = `
+        <div class="table-container">
+            <div class="table-header"><h3>Offer Management</h3></div>
+            <table>
+                <thead><tr><th>Applicant</th><th>Job</th><th>Salary</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                    ${offers.map(o => `
+                        <tr>
+                            <td><strong>${o.applicantName}</strong></td>
+                            <td>${o.jobTitle}</td>
+                            <td>$${parseFloat(o.salary).toLocaleString()}</td>
+                            <td>${o.date ? o.date.split('T')[0] : ''}</td>
+                            <td><span class="badge ${badgeClass(o.status)}">${o.status}</span></td>
+                            <td>
+                                ${o.status === 'Pending' ? `
+                                    <button class="btn-primary" style="padding:.2rem .4rem;font-size:.7rem;background:var(--secondary)" onclick="updateOffer(${o.id}, 'Accepted')">Accept</button>
+                                    <button class="btn-primary" style="padding:.2rem .4rem;font-size:.7rem;background:var(--danger)" onclick="updateOffer(${o.id}, 'Rejected')">Reject</button>
+                                ` : '-'}
+                            </td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+}
+
+async function updateOffer(id, status) {
+    const res = await apiFetch(`/offers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    if (res) { showToast(`✅ Offer ${status}`); renderOffers(); }
+}
+
+// ─── Reports ─────────────────────────────────────────────────────────────────
+async function renderReports() {
+    contentArea.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-info"><h3>Selection Rate</h3><p id="kpi-rate">0%</p></div></div>
+            <div class="stat-card"><div class="stat-info"><h3>Avg Salary</h3><p id="kpi-salary">$0</p></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="table-container" style="padding:20px"><h4 style="margin-bottom:15px">Applications per Job</h4><canvas id="chart-jobs"></canvas></div>
+            <div class="table-container" style="padding:20px"><h4 style="margin-bottom:15px">Status Distribution</h4><canvas id="chart-status"></canvas></div>
+        </div>`;
+    
+    const data = await apiFetch('/reports/analytics');
+    if (!data) return;
+
+    document.getElementById('kpi-rate').innerText = `${parseFloat(data.selectionRate).toFixed(1)}%`;
+    document.getElementById('kpi-salary').innerText = `$${parseFloat(data.avgSalary).toLocaleString()}`;
+
+    new Chart(document.getElementById('chart-jobs'), {
+        type: 'bar',
+        data: {
+            labels: data.appsPerJob.map(d => d.label),
+            datasets: [{ label: 'Applications', data: data.appsPerJob.map(d => d.value), backgroundColor: '#4f46e5' }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    new Chart(document.getElementById('chart-status'), {
+        type: 'doughnut',
+        data: {
+            labels: data.statusDist.map(d => d.label),
+            datasets: [{ data: data.statusDist.map(d => d.value), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'] }]
+        }
+    });
+}
+
+// ─── Shared Utilities ────────────────────────────────────────────────────────
+async function updateStatus(appId, newStatus) {
+    const res = await apiFetch(`/applications/${appId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) });
+    if (res) showToast(`✅ Status updated to ${newStatus}`);
+}
+
+function badgeClass(status) {
+    const map = { 'Applied': 'applied', 'Shortlisted': 'shortlisted', 'Selected': 'selected', 'Hired': 'selected', 'Rejected': 'rejected', 'Pending': 'applied', 'Under Review': 'shortlisted', 'Active': 'open', 'Blocked': 'rejected' };
+    return map[status] || 'applied';
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
 function openModal() { modalOverlay.classList.add('active'); }
 function closeModal() { modalOverlay.classList.remove('active'); }
 
 closeModalBtn.addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
 
-// ─── Toast Notifications ──────────────────────────────────────────────────────
 function showToast(msg, type = 'success') {
     const t = document.createElement('div');
     t.className = 'toast' + (type === 'error' ? ' toast-error' : '');
@@ -312,14 +434,4 @@ function showToast(msg, type = 'success') {
     document.body.appendChild(t);
     setTimeout(() => t.classList.add('show'), 10);
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
-}
-
-// ─── Utilities ────────────────────────────────────────────────────────────────
-function badgeClass(status) {
-    const map = { 'Applied': 'applied', 'Shortlisted': 'shortlisted', 'Selected': 'selected', 'Hired': 'selected', 'Rejected': 'rejected', 'Pending': 'applied', 'Under Review': 'shortlisted' };
-    return map[status] || 'applied';
-}
-
-function today() {
-    return new Date().toISOString().split('T')[0];
 }
