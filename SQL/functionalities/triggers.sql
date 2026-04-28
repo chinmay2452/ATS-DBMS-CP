@@ -2,14 +2,14 @@
 delimiter //
 
 CREATE TRIGGER trg_check_applicant_status
-BEFORE INSERT ON Applications
+BEFORE INSERT ON application
 FOR EACH ROW
 BEGIN
     DECLARE status_val VARCHAR(20);
 
     SELECT applicant_status
     INTO status_val
-    FROM Applicant
+    FROM applicant
     WHERE applicant_id = NEW.applicant_id;
 
     IF status_val IN ('Blocked', 'Hired') THEN
@@ -26,16 +26,16 @@ delimiter ;
 delimiter //
 
 CREATE TRIGGER trg_offer_accept_update_status
-AFTER UPDATE ON offer_tbl
+AFTER UPDATE ON offer
 FOR EACH ROW
 BEGIN
     IF NEW.offer_status = 'Accepted' AND OLD.offer_status <> 'Accepted' THEN
 
-        UPDATE Applicant
+        UPDATE applicant
         SET applicant_status = 'Hired'
         WHERE applicant_id = (
             SELECT applicant_id
-            FROM Applications
+            FROM application
             WHERE application_id = NEW.application_id
         );
 
@@ -51,7 +51,7 @@ delimiter ;
 delimiter //
 
 CREATE TRIGGER trg_prevent_multiple_offers
-BEFORE UPDATE ON Offer_tbl
+BEFORE UPDATE ON offer
 FOR EACH ROW
 BEGIN
     DECLARE app_id INT;
@@ -61,13 +61,13 @@ BEGIN
 
         SELECT applicant_id
         INTO app_id
-        FROM Applications
+        FROM application
         WHERE application_id = NEW.application_id;
 
         SELECT COUNT(*)
         INTO cnt
-        FROM Offer o
-        JOIN Applications a ON o.application_id = a.application_id
+        FROM offer o
+        JOIN application a ON o.application_id = a.application_id
         WHERE a.applicant_id = app_id
         AND o.offer_status = 'Accepted'
         AND o.offer_id <> NEW.offer_id;
@@ -89,14 +89,14 @@ delimiter ;
 delimiter //
 
 CREATE TRIGGER trg_validate_interview_date
-BEFORE INSERT ON Interview
+BEFORE INSERT ON interview
 FOR EACH ROW
 BEGIN
     DECLARE app_date DATE;
 
     SELECT application_date
     INTO app_date
-    FROM Applications
+    FROM application
     WHERE application_id = NEW.application_id;
 
     IF NEW.interview_date < app_date THEN
@@ -109,32 +109,31 @@ END;
 delimiter ;
 
 
--- 5. Automatically log stage changes in Stage_History table
+-- 5. Automatically log stage changes in stage_history table
 
 delimiter //
 
 CREATE TRIGGER trg_log_stage_change
-AFTER UPDATE ON Applications
+AFTER UPDATE ON application
 FOR EACH ROW
 BEGIN
-    DECLARE sid INT;
+    DECLARE sname VARCHAR(50);
 
-    IF OLD.current_stage <> NEW.current_stage THEN
+    IF OLD.current_stage_id <> NEW.current_stage_id THEN
 
-        SELECT stage_id
-        INTO sid
-        FROM Recruitment_Stage
-        WHERE stage_name = NEW.current_stage
+        SELECT stage_name
+        INTO sname
+        FROM recruitment_stage
+        WHERE stage_id = NEW.current_stage_id
         LIMIT 1;
 
-        INSERT INTO Stage_History
-        (history_id, moved_on, remarks, application_id, stage_id)
+        INSERT INTO stage_history
+        (moved_on, remarks, application_id, stage_id)
         VALUES (
-            FLOOR(RAND()*100000),
             CURDATE(),
-            CONCAT('Moved to ', NEW.current_stage),
+            CONCAT('Moved to ', sname),
             NEW.application_id,
-            sid
+            NEW.current_stage_id
         );
 
     END IF;
@@ -149,7 +148,7 @@ delimiter ;
 delimiter //
 
 CREATE TRIGGER trg_auto_close_job
-BEFORE UPDATE ON Job
+BEFORE UPDATE ON job
 FOR EACH ROW
 BEGIN
     IF DATEDIFF(CURDATE(), OLD.posted_date) > 60 THEN

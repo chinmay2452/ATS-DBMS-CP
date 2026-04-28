@@ -1,4 +1,4 @@
---1. Apply for job
+-- 1. Apply for job
 DELIMITER //
 
 CREATE PROCEDURE ApplyForJob(
@@ -7,19 +7,19 @@ CREATE PROCEDURE ApplyForJob(
     IN p_job_id INT
 )
 BEGIN
-    INSERT INTO Applications(
+    INSERT INTO application(
         application_id,
         application_date,
         application_status,
-        current_stage,
+        current_stage_id,
         applicant_id,
         job_id
     )
     VALUES(
         p_application_id,
         CURDATE(),
-        'Applied',
-        'Applied',
+        'Pending',
+        1,
         p_applicant_id,
         p_job_id
     );
@@ -27,7 +27,7 @@ END;
 //
 DELIMITER ;
 
---2. Schedule Interview
+-- 2. Schedule Interview
 DELIMITER //
 
 CREATE PROCEDURE ScheduleInterview(
@@ -38,7 +38,7 @@ CREATE PROCEDURE ScheduleInterview(
     IN p_recruiter_id INT
 )
 BEGIN
-    INSERT INTO Interview(
+    INSERT INTO interview(
         interview_id,
         interview_date,
         interview_type,
@@ -62,7 +62,7 @@ END;
 DELIMITER ;
 
 
---3. Generate offer
+-- 3. Generate offer
 DELIMITER //
 
 CREATE PROCEDURE GenerateOffer(
@@ -71,7 +71,7 @@ CREATE PROCEDURE GenerateOffer(
     IN p_salary DECIMAL(10,2)
 )
 BEGIN
-    INSERT INTO Offer(
+    INSERT INTO offer(
         offer_id,
         offer_date,
         salary_package,
