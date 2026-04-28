@@ -1,4 +1,3 @@
-
 -- APPLICANT TRACKING SYSTEM (ATS)
 -- CORE OPERATIONAL QUERIES (Part A)
 
@@ -11,9 +10,9 @@ SELECT
     a.full_name,
     j.job_id,
     j.job_title
-FROM Applicant a
-JOIN Application ap ON a.applicant_id = ap.applicant_id
-JOIN Job j ON ap.job_id = j.job_id;
+FROM applicant a
+JOIN application ap ON a.applicant_id = ap.applicant_id
+JOIN job j ON ap.job_id = j.job_id;
 
 
 -- 2. Display all applications with applicant details and status
@@ -21,9 +20,10 @@ SELECT
     ap.application_id,
     a.full_name,
     ap.application_status,
-    ap.current_stage
-FROM Application ap
-JOIN Applicant a ON ap.applicant_id = a.applicant_id;
+    rs.stage_name AS current_stage
+FROM application ap
+JOIN applicant a ON ap.applicant_id = a.applicant_id
+LEFT JOIN recruitment_stage rs ON ap.current_stage_id = rs.stage_id;
 
 
 -- 3. Retrieve interview details along with recruiter information
@@ -33,8 +33,8 @@ SELECT
     i.interview_type,
     i.result,
     r.recruiter_name
-FROM Interview i
-JOIN Recruiter r ON i.recruiter_id = r.recruiter_id;
+FROM interview i
+JOIN recruiter r ON i.recruiter_id = r.recruiter_id;
 
 
 -- 4. Get list of selected applicants with job details
@@ -42,10 +42,10 @@ SELECT
     a.full_name,
     j.job_title,
     ap.application_status
-FROM Applicant a
-JOIN Application ap ON a.applicant_id = ap.applicant_id
-JOIN Job j ON ap.job_id = j.job_id
-WHERE ap.application_status = 'Selected';
+FROM applicant a
+JOIN application ap ON a.applicant_id = a.applicant_id
+JOIN job j ON ap.job_id = j.job_id
+WHERE ap.application_status = 'Hired';
 
 
 -- 5. Retrieve offer details for applicants
@@ -54,9 +54,9 @@ SELECT
     a.full_name,
     o.salary_package,
     o.offer_status
-FROM Offer o
-JOIN Application ap ON o.application_id = ap.application_id
-JOIN Applicant a ON ap.applicant_id = a.applicant_id;
+FROM offer o
+JOIN application ap ON o.application_id = ap.application_id
+JOIN applicant a ON ap.applicant_id = a.applicant_id;
 
 
 -- 6. Track complete stage history of applications
@@ -65,9 +65,9 @@ SELECT
     rs.stage_name,
     sh.moved_on,
     sh.remarks
-FROM Stage_History sh
-JOIN Recruitment_Stage rs ON sh.stage_id = rs.stage_id
-JOIN Application ap ON sh.application_id = ap.application_id;
+FROM stage_history sh
+JOIN recruitment_stage rs ON sh.stage_id = rs.stage_id
+JOIN application ap ON sh.application_id = ap.application_id;
 
 
 -- 7. Retrieve all active job applications
@@ -75,9 +75,9 @@ SELECT
     a.full_name,
     j.job_title,
     ap.application_status
-FROM Application ap
-JOIN Applicant a ON ap.applicant_id = a.applicant_id
-JOIN Job j ON ap.job_id = j.job_id
+FROM application ap
+JOIN applicant a ON ap.applicant_id = a.applicant_id
+JOIN job j ON ap.job_id = j.job_id
 WHERE j.job_status = 'Open';
 
 
@@ -86,9 +86,9 @@ SELECT
     a.full_name,
     i.interview_type,
     i.result
-FROM Interview i
-JOIN Application ap ON i.application_id = ap.application_id
-JOIN Applicant a ON ap.applicant_id = a.applicant_id
+FROM interview i
+JOIN application ap ON i.application_id = ap.application_id
+JOIN applicant a ON ap.applicant_id = a.applicant_id
 WHERE i.result = 'Pass';
 
 
@@ -98,8 +98,8 @@ SELECT
     e.min_experience,
     e.required_skills,
     e.qualification
-FROM Job j
-JOIN Eligibility_Criteria e ON j.job_id = e.job_id;
+FROM job j
+JOIN eligibility_criteria e ON j.job_id = e.job_id;
 
 
 -- 10. Retrieve applications along with recruiter handling interviews
@@ -107,11 +107,11 @@ SELECT
     a.full_name,
     j.job_title,
     r.recruiter_name
-FROM Applicant a
-JOIN Application ap ON a.applicant_id = ap.applicant_id
-JOIN Job j ON ap.job_id = j.job_id
-JOIN Interview i ON ap.application_id = i.application_id
-JOIN Recruiter r ON i.recruiter_id = r.recruiter_id;
+FROM applicant a
+JOIN application ap ON a.applicant_id = ap.applicant_id
+JOIN job j ON ap.job_id = j.job_id
+JOIN interview i ON ap.application_id = i.application_id
+JOIN recruiter r ON i.recruiter_id = r.recruiter_id;
 
 
 -- REPORTS / ANALYTICS QUERIES (Part B)
@@ -123,8 +123,8 @@ JOIN Recruiter r ON i.recruiter_id = r.recruiter_id;
 SELECT 
     j.job_title,
     COUNT(ap.application_id) AS total_applicants
-FROM Job j
-LEFT JOIN Application ap ON j.job_id = ap.job_id
+FROM job j
+LEFT JOIN application ap ON j.job_id = ap.job_id
 GROUP BY j.job_title;
 
 
@@ -134,7 +134,7 @@ GROUP BY j.job_title;
 SELECT 
     application_status,
     COUNT(*) AS total
-FROM Application
+FROM application
 GROUP BY application_status;
 
 
@@ -143,7 +143,7 @@ GROUP BY application_status;
 
 SELECT 
     AVG(salary_package) AS avg_salary
-FROM Offer;
+FROM offer;
 
 
 -- 4. Count interviews conducted by each recruiter
@@ -152,8 +152,8 @@ FROM Offer;
 SELECT 
     r.recruiter_name,
     COUNT(i.interview_id) AS total_interviews
-FROM Recruiter r
-LEFT JOIN Interview i ON r.recruiter_id = i.recruiter_id
+FROM recruiter r
+LEFT JOIN interview i ON r.recruiter_id = i.recruiter_id
 GROUP BY r.recruiter_name;
 
 
@@ -163,8 +163,8 @@ GROUP BY r.recruiter_name;
 SELECT 
     rs.stage_name,
     COUNT(sh.history_id) AS total_entries
-FROM Recruitment_Stage rs
-LEFT JOIN Stage_History sh ON rs.stage_id = sh.stage_id
+FROM recruitment_stage rs
+LEFT JOIN stage_history sh ON rs.stage_id = sh.stage_id
 GROUP BY rs.stage_name;
 
 
@@ -174,9 +174,9 @@ GROUP BY rs.stage_name;
 SELECT 
     j.job_title,
     COUNT(ap.application_id) AS selected_count
-FROM Job j
-JOIN Application ap ON j.job_id = ap.job_id
-WHERE ap.application_status = 'Selected'
+FROM job j
+JOIN application ap ON j.job_id = ap.job_id
+WHERE ap.application_status = 'Hired'
 GROUP BY j.job_title;
 
 
@@ -185,7 +185,7 @@ GROUP BY j.job_title;
 
 SELECT 
     MAX(salary_package) AS highest_salary
-FROM Offer;
+FROM offer;
 
 
 -- 8. Applicants who reached final stage but not selected
@@ -193,11 +193,12 @@ FROM Offer;
 
 SELECT 
     a.full_name,
-    ap.current_stage
-FROM Application ap
-JOIN Applicant a ON ap.applicant_id = a.applicant_id
-WHERE ap.current_stage = 'Final Interview'
-AND ap.application_status != 'Selected';
+    rs.stage_name AS current_stage
+FROM application ap
+JOIN applicant a ON ap.applicant_id = a.applicant_id
+JOIN recruitment_stage rs ON ap.current_stage_id = rs.stage_id
+WHERE rs.stage_name = 'Final Interview'
+AND ap.application_status != 'Hired';
 
 
 -- 9. Jobs with no applications
@@ -205,8 +206,8 @@ AND ap.application_status != 'Selected';
 
 SELECT 
     j.job_title
-FROM Job j
-LEFT JOIN Application ap ON j.job_id = ap.job_id
+FROM job j
+LEFT JOIN application ap ON j.job_id = ap.job_id
 WHERE ap.application_id IS NULL;
 
 
@@ -214,5 +215,5 @@ WHERE ap.application_id IS NULL;
 -- Purpose: Hiring efficiency
 
 SELECT 
-    (COUNT(CASE WHEN application_status = 'Selected' THEN 1 END) * 100.0 / COUNT(*)) AS selection_percentage
-FROM Application;
+    (COUNT(CASE WHEN application_status = 'Hired' THEN 1 END) * 100.0 / COUNT(*)) AS selection_percentage
+FROM application;
