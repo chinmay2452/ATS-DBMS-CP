@@ -484,3 +484,326 @@ tr:hover td {
     transition: opacity 0.2s ease;
 }
 
+/* ─── SQL Terminal Styles ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+.sql-terminal {
+    background: #0f172a;
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: #e2e8f0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+    border: 1px solid #1e293b;
+}
+
+.sql-terminal .sql-keyword { color: #818cf8; font-weight: 600; }
+.sql-terminal .sql-function { color: #f472b6; }
+.sql-terminal .sql-string { color: #34d399; }
+.sql-terminal .sql-comment { color: #64748b; font-style: italic; }
+.sql-terminal .sql-number { color: #fbbf24; }
+.sql-terminal .sql-operator { color: #94a3b8; }
+
+.sql-terminal::before {
+    content: 'mysql>';
+    color: #4f46e5;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.terminal-label {
+    display: inline-block;
+    background: #1e293b;
+    color: #94a3b8;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 0.5rem;
+}
+
+/* Result Table (MySQL CLI style) */
+.sql-result-container {
+    margin-top: 1rem;
+    animation: slideUp 0.4s ease;
+}
+
+.sql-result {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+}
+
+.sql-result th {
+    background: #1e293b;
+    color: #818cf8;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    text-align: left;
+    border: 1px solid #334155;
+    white-space: nowrap;
+}
+
+.sql-result td {
+    padding: 0.5rem 1rem;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    background: #0f172a;
+    white-space: nowrap;
+}
+
+.sql-result tr:hover td {
+    background: #1e293b;
+}
+
+.sql-result-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #64748b;
+    padding: 0.5rem 0;
+    border-top: 1px solid #334155;
+    margin-top: 0;
+}
+
+/* Terminal Output Messages */
+.terminal-output {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    margin-top: 0.75rem;
+    animation: slideUp 0.4s ease;
+    line-height: 1.6;
+}
+
+.terminal-success {
+    background: #022c22;
+    color: #34d399;
+    border-left: 4px solid #10b981;
+}
+
+.terminal-error {
+    background: #2d0a0a;
+    color: #fca5a5;
+    border-left: 4px solid #ef4444;
+}
+
+.terminal-info {
+    background: #1e1b4b;
+    color: #a5b4fc;
+    border-left: 4px solid #6366f1;
+}
+
+/* Demo Cards */
+.demo-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    transition: var(--transition);
+    border: 1px solid var(--border);
+}
+
+.demo-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+}
+
+.demo-card-header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    gap: 1rem;
+}
+
+.demo-card-header h4 {
+    font-size: 0.95rem;
+    color: var(--dark);
+    font-weight: 600;
+}
+
+.demo-card-header .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.demo-card-header .card-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.demo-card-header .card-badge.analytics {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.demo-card-header .card-badge.trigger {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.demo-card-header .card-badge.procedure {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.demo-card-body {
+    padding: 0 1.5rem 1.5rem;
+    display: none;
+}
+
+.demo-card-body.open {
+    display: block;
+    animation: slideUp 0.3s ease;
+}
+
+.demo-card-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+/* Run Button */
+.run-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.run-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+.run-btn:active {
+    transform: scale(0.97);
+}
+
+.run-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.run-btn i {
+    font-size: 0.7rem;
+}
+
+.demo-btn {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.demo-btn:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* Section Headers */
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-title i {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.section-count {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Before/After comparison */
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.comparison-grid .comparison-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+}
+
+/* Procedure form styles */
+.proc-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.proc-form .form-group {
+    margin-bottom: 0;
+}
+
+.proc-form .form-group label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.proc-form .form-group input,
+.proc-form .form-group select {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* Animation */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.result-loading {
+    animation: pulse 1s infinite;
+    color: var(--primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    padding: 1rem;
+}

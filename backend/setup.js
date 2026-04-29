@@ -34,14 +34,28 @@ async function setup() {
 
         // 5. Read and Run Functionalities (Procedures, etc.)
         console.log('⚙️ Setting up procedures and views...');
-        const funcFiles = ['procedures.sql', 'views.sql', 'triggers.sql'];
+        const funcFiles = ['views.sql', 'procedures.sql', 'triggers.sql'];
         for (const file of funcFiles) {
             const fPath = path.join(__dirname, '..', 'SQL', 'functionalities', file);
             if (fs.existsSync(fPath)) {
-                const fSql = fs.readFileSync(fPath, 'utf8');
-                // Note: Triggers/Procedures often need delimiter handling in CLI, 
-                // but mysql2.query handles them as a single block usually.
-                await connection.query(fSql).catch(err => console.log(`⚠️ Warning in ${file}:`, err.message));
+                let fSql = fs.readFileSync(fPath, 'utf8');
+
+                // Handle DELIMITER: strip DELIMITER lines, split on '//' for procedures/triggers
+                if (fSql.includes('DELIMITER')) {
+                    // Remove DELIMITER lines and split blocks on '//'
+                    fSql = fSql.replace(/^DELIMITER\s+.*$/gm, '');
+                    const blocks = fSql.split('//').map(b => b.trim()).filter(b => b.length > 0);
+                    for (const block of blocks) {
+                        await connection.query(block).catch(err =>
+                            console.log(`⚠️ Warning in ${file}:`, err.message)
+                        );
+                    }
+                } else {
+                    // Views and simple SQL — run as-is with multipleStatements
+                    await connection.query(fSql).catch(err =>
+                        console.log(`⚠️ Warning in ${file}:`, err.message)
+                    );
+                }
             }
         }
 
